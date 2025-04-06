@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout/user-base}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:replace="~{layout/user-base :: title}">Đăng Ký</title>
+</head>
+<body>
+    <div layout:fragment="content" class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="text-center">Đăng Ký</h3>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/account/register}" th:object="${customer}" method="post">
+                            <div th:if="${error}" class="alert alert-danger">
+                                <span th:text="${error}"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Họ và Tên</label>
+                                <input type="text" class="form-control" id="name" th:field="*{name}" required>
+                                <div th:errors="*{name}" class="text-danger"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Tên Đăng Nhập</label>
+                                <input type="text" class="form-control" id="username" th:field="*{username}" required>
+                                <div th:errors="*{username}" class="text-danger"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Mật Khẩu</label>
+                                <input type="password" class="form-control" id="password" th:field="*{password}" required>
+                                <div th:errors="*{password}" class="text-danger"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" th:field="*{email}" required>
+                                <div th:errors="*{email}" class="text-danger"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Số Điện Thoại</label>
+                                <input type="text" class="form-control" id="phone" th:field="*{phone}">
+                                <div th:errors="*{phone}" class="text-danger"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="address" class="form-label">Địa Chỉ</label>
+                                <input type="text" class="form-control" id="address" th:field="*{address}">
+                                <div th:errors="*{address}" class="text-danger"></div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Đăng Ký</button>
+                        </form>
+                    </div>
+                    <div class="card-footer text-center">
+                        <p>Đã có tài khoản? <a th:href="@{/account/login}">Đăng nhập tại đây</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
