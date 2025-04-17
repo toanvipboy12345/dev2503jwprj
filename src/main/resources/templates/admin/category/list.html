@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/admin-base}">
+<head>
+    <title>Danh Mục</title>
+</head>
+<body>
+    <div layout:fragment="content" class="container-fluid">
+        <!-- Thông báo thành công -->
+        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}" style="display: none;"></div>
+
+        <!-- Thông báo lỗi -->
+        <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}" style="display: none;"></div>
+
+        <!-- Form tìm kiếm -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fa fa-search me-2"></i>Tìm Kiếm Danh Mục
+            </div>
+            <div class="card-body">
+                <form th:action="@{/admin/categories/list}" method="get">
+                    <div class="input-group">
+                        <input type="text" name="keyword" class="form-control" th:value="${keyword}" placeholder="Tìm theo tên hoặc slug...">
+                        <button type="submit" class="btn btn-primary">Tìm</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Bảng danh mục -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fa fa-list me-2"></i>Danh Sách Danh Mục
+                <a th:href="@{/admin/categories/add}" class="btn btn-success btn-sm float-end">Thêm Danh Mục</a>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên</th>
+                            <th>Hình Ảnh</th>
+                            <th>Slug</th>
+                            <th>Danh Mục Cha</th>
+                            <th>Trạng Thái</th>
+                            <th>Người Tạo</th>
+                            <th>Người Sửa</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="category : ${categories}" th:data-id="${category.id}">
+                            <td th:text="${category.id}"></td>
+                            <td th:text="${category.name}"></td>
+                            <td>
+                                <div th:if="${category.icon != null}">
+                                    <img th:src="@{${category.icon}}" alt="Icon" style="width: 150px; object-fit: cover;" />
+                                </div>
+                                <span th:if="${category.icon == null}">Không có</span>
+                            </td>
+                            <td th:text="${category.slug}"></td>
+                            <td th:text="${category.idParent != null} ? ${category.idParent} : 'Không có'"></td>
+                            <td th:text="${category.isActive == 1} ? 'Hiển thị' : 'Ẩn'"></td>
+                            <td th:text="${category.createdBy != null && customerNames.containsKey(category.createdBy)} ? ${customerNames.get(category.createdBy)} : 'Không xác định'"></td>
+                            <td th:text="${category.updatedBy != null && customerNames.containsKey(category.updatedBy)} ? ${customerNames.get(category.updatedBy)} : 'Không xác định'"></td>
+                            <td>
+                                <button type="button" class="btn btn-warning btn-sm me-1 edit-category-btn"
+                                        th:data-id="${category.id}"
+                                        th:data-name="${category.name}"
+                                        th:data-slug="${category.slug}"
+                                        th:data-idparent="${category.idParent}"
+                                        th:data-isactive="${category.isActive}"
+                                        th:data-icon="${category.icon}"
+                                        th:data-metatitle="${category.metaTitle}"
+                                        th:data-metakeyword="${category.metaKeyword}"
+                                        th:data-metadescription="${category.metaDescription}"
+                                        th:data-notes="${category.notes}"
+                                        th:data-isdelete="${category.isDelete}"
+                                        data-bs-toggle="modal" data-bs-target="#editCategoryModal">
+                                    Sửa
+                                </button>
+                                <button type="button" class="btn btn-danger btn-sm delete-category-btn" th:data-id="${category.id}" data-bs-toggle="modal" data-bs-target="#deleteConfirmationModal">Xóa</button>
+                            </td>
+                        </tr>
+                        <tr th:if="${categories.isEmpty()}">
+                            <td colspan="9" class="text-center">Không có danh mục nào.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Modal chỉnh sửa danh mục -->
+        <div class="modal fade" id="editCategoryModal" tabindex="-1" aria-labelledby="editCategoryModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editCategoryModalLabel">Sửa Danh Mục</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="modal-error" class="alert alert-danger d-none"></div>
+                        <form id="editCategoryForm" enctype="multipart/form-data">
+                            <input type="hidden" id="categoryId" name="id">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                            <input type="hidden" id="editIsDelete" name="isDelete" />
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="editName" class="form-label">Tên Danh Mục</label>
+                                        <input type="text" class="form-control" id="editName" name="name" maxlength="500" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="editSlug" class="form-label">Slug</label>
+                                        <input type="text" class="form-control" id="editSlug" name="slug" maxlength="160" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="editIdParent" class="form-label">Danh Mục Cha</label>
+                                        <select class="form-control" id="editIdParent" name="idParent">
+                                            <option value="">Không có</option>
+                                            <option th:each="parent : ${parentCategories}" th:value="${parent.id}" th:text="${parent.name}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="editIsActive" class="form-label">Trạng Thái</label>
+                                        <select class="form-control" id="editIsActive" name="isActive" required>
+                                            <option value="1">Hiển thị</option>
+                                            <option value="0">Ẩn</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="editIconFile" class="form-label">Hình Ảnh Danh Mục</label>
+                                        <input type="file" class="form-control" id="editIconFile" name="iconFile" accept="image/jpeg,image/png,image/gif">
+                                        <div id="currentIcon" class="mt-2 d-none">
+                                            <p>Hình ảnh hiện tại:</p>
+                                            <img id="currentIconImg" alt="Icon" style="width: 100px; height: 100px; object-fit: cover;" />
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="editMetaTitle" class="form-label">Meta Title</label>
+                                        <input type="text" class="form-control" id="editMetaTitle" name="metaTitle" maxlength="100">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="editMetaKeyword" class="form-label">Meta Keyword</label>
+                                        <input type="text" class="form-control" id="editMetaKeyword" name="metaKeyword" maxlength="300">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="editMetaDescription" class="form-label">Meta Description</label>
+                                        <input type="text" class="form-control" id="editMetaDescription" name="metaDescription" maxlength="300">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editNotes" class="form-label">Ghi Chú</label>
+                                <textarea class="form-control" id="editNotes" name="notes" rows="3"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-primary" id="saveCategoryBtn">Cập Nhật</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal thông báo thành công -->
+        <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="successModalLabel">Thành công</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Cập nhật danh mục thành công!
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Đóng</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal xác nhận xóa -->
+        <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteConfirmationModalLabel">Xác nhận xóa</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Bạn có chắc muốn xóa danh mục này?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Xác nhận</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liên kết customerNames -->
+        <script th:inline="javascript">
+            window.customerNames = /*[[${customerNames}]]*/ {};
+        </script>
+
+        <!-- Liên kết category.js trong content, nhưng dùng defer -->
+        <script th:src="@{/js/category/category.js}" defer></script>
+    </div>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout/user-base}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:replace="~{layout/user-base :: title}">Trang Chủ</title>
+</head>
+<body>
+    <div layout:fragment="content" class="container mt-5">
+        <h1>Chào mừng đến với E-Commerce</h1>
+        <p>Đây là trang chủ của cửa hàng trực tuyến. Bạn có thể khám phá các sản phẩm, thêm vào giỏ hàng, và quản lý hồ sơ cá nhân.</p>
+        <a th:href="@{/products}" class="btn btn-primary">Xem Sản Phẩm</a>
+    </div>
+
+    <script th:inline="javascript">
+        // Lấy sessionId từ server và in ra console
+        const sessionId = /*[[${sessionId}]]*/ 'unknown';
+        console.log('Session ID:', sessionId);
+
+        // Bạn cũng có thể in thêm thông tin khác nếu cần
+        console.log('User Roles:', /*[[${#authentication.getAuthorities()}]]*/ 'unknown');
+    </script>
+</body>
+</html>

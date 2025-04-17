@@ -8,11 +8,18 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
 import com.devmaster.dev2503jwprj.entity.Customer;
+import jakarta.servlet.http.HttpSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
     @Autowired
     private CustomerService customerService;
@@ -35,16 +42,31 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        SimpleUrlLogoutSuccessHandler logoutSuccessHandler = new SimpleUrlLogoutSuccessHandler();
+        logoutSuccessHandler.setDefaultTargetUrl("/account/login?logout");
+        logoutSuccessHandler.setAlwaysUseDefaultTargetUrl(true);
+
         http
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/admin/**").hasRole("ADMIN")
-                .requestMatchers("/account/register", "/account/login", "/css/**", "/js/**").permitAll()
+                // Thêm /images/** vào danh sách được phép truy cập
+                .requestMatchers("/account/register", "/account/login", "/css/**", "/js/**", "/images/**").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
                 .loginPage("/account/login")
                 .loginProcessingUrl("/login")
                 .successHandler((request, response, authentication) -> {
+                    HttpSession session = request.getSession(false);
+                    if (session != null) {
+                        logger.info("Session ID: {}", session.getId());
+                        logger.info("Session Attributes:");
+                        Collections.list(session.getAttributeNames())
+                                .forEach(name -> logger.info("  {}: {}", name, session.getAttribute(name)));
+                    } else {
+                        logger.info("Không có session sau khi đăng nhập.");
+                    }
+
                     if (authentication.getAuthorities().stream()
                             .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN"))) {
                         response.sendRedirect("/admin/dashboard");
@@ -55,8 +77,10 @@ public class SecurityConfig {
                 .permitAll()
             )
             .logout(logout -> logout
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/account/login?logout")
+                .logoutUrl("/account/logout")
+                .logoutSuccessHandler(logoutSuccessHandler)
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
                 .permitAll()
             );
 

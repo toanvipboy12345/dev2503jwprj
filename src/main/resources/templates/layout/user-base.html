@@ -1,38 +1,25 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout/user-base}">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:replace="~{layout/user-base :: title}">Đăng Nhập</title>
+    <title layout:fragment="title">Tiêu đề mặc định</title>
+    <!-- Thêm CSS nếu cần -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-
 <body>
-    <div layout:fragment="content" class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="text-center">Đăng Nhập</h3>
-                    </div>
-                    <div class="card-body">
-                        <form th:action="@{/account/login}" method="post">
-                            <div class="mb-3">
-                                <label for="username" class="form-label">Tên Đăng Nhập</label>
-                                <input type="text" class="form-control" id="username" name="username" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="password" class="form-label">Mật Khẩu</label>
-                                <input type="password" class="form-control" id="password" name="password" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary w-100">Đăng Nhập</button>
-                        </form>
-                    </div>
-                    <div class="card-footer text-center">
-                        <p>Chưa có tài khoản? <a th:href="@{/account/register}">Đăng ký tại đây</a></p>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- Header -->
+    <div th:replace="~{layout/header}"></div>
+
+    <!-- Nội dung động từ các trang khác -->
+    <div layout:fragment="content">
+        <!-- Phần này sẽ được thay thế bởi nội dung từ login.html hoặc các trang khác -->
     </div>
+
+    <!-- Footer -->
+    <div th:replace="~{layout/footer}"></div>
+
+    <!-- Thêm JS nếu cần -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -39,6 +39,17 @@ public class CustomerService {
     }
 
     public Optional<Customer> findByUsername(String username) {
-        return customerRepository.findByUsername(username);
+        return customerRepository.findByUsername(username)
+                .filter(customer -> customer.getIsDelete() == null || customer.getIsDelete() == 0);
+    }
+
+    public Optional<Customer> findByEmail(String email) {
+        return customerRepository.findByEmail(email)
+                .filter(customer -> customer.getIsDelete() == null || customer.getIsDelete() == 0);
+    }
+
+    public Optional<Customer> findById(Long id) {
+        return customerRepository.findById(id)
+                .filter(customer -> customer.getIsDelete() == null || customer.getIsDelete() == 0);
     }
 }
