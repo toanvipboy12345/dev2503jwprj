@@ -1,80 +1,79 @@
 <div th:fragment="navigation">
-    <ul class="navbar-nav bg-dark text-white position-fixed vh-100" style="width: 250px; top: 0; padding-top: 56px;">
+    <ul class="navbar-nav bg-dark text-white position-fixed vh-100" style="width: 250px; top: 0; padding-top: 56px; overflow-y: auto;">
         <li class="nav-item">
-            <a class="nav-link px-3 py-2" href="/admin/dashboard">
+            <a class="nav-link px-3 py-2 rounded-start d-flex align-items-center" href="/admin/dashboard">
                 <i class="fa fa-fw fa-dashboard me-2"></i>
                 <span>Dashboard</span>
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link px-3 py-2" href="/admin/users/list">
+            <a class="nav-link px-3 py-2 rounded-start d-flex align-items-center" href="/admin/users/list">
                 <i class="fa fa-fw fa-users me-2"></i>
                 <span>Quản lý người dùng</span>
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link px-3 py-2" href="#collapseCategories" data-bs-toggle="collapse" aria-expanded="false" aria-controls="collapseCategories">
+            <a class="nav-link px-3 py-2 rounded-start d-flex align-items-center" href="#collapseCategories" data-bs-toggle="collapse" aria-expanded="false" aria-controls="collapseCategories">
                 <i class="fa fa-fw fa-list me-2"></i>
                 <span>Quản lý danh mục</span>
-                <i class="fa fa-fw fa-angle-down float-end mt-1"></i>
+                <i class="fa fa-fw fa-angle-down float-end mt-1 dropdown-icon"></i>
             </a>
             <ul class="collapse list-unstyled ps-4" id="collapseCategories">
                 <li>
-                    <a class="nav-link px-3 py-1 text-white" href="/admin/categories/list">Danh sách danh mục</a>
+                    <a class="nav-link px-3 py-1 text-white rounded-start d-flex align-items-center" href="/admin/categories/list">Danh sách danh mục</a>
                 </li>
                 <li>
-                    <a class="nav-link px-3 py-1 text-white" href="/admin/categories/add">Thêm danh mục</a>
+                    <a class="nav-link px-3 py-1 text-white rounded-start d-flex align-items-center" href="/admin/categories/add">Thêm danh mục</a>
                 </li>
             </ul>
         </li>
         <li class="nav-item">
-            <a class="nav-link px-3 py-2" href="#collapseProducts" data-bs-toggle="collapse" aria-expanded="false" aria-controls="collapseProducts">
+            <a class="nav-link px-3 py-2 rounded-start d-flex align-items-center" href="#collapseProducts" data-bs-toggle="collapse" aria-expanded="false" aria-controls="collapseProducts">
                 <i class="fa fa-fw fa-shopping-bag me-2"></i>
                 <span>Quản lý sản phẩm</span>
-                <i class="fa fa-fw fa-angle-down float-end mt-1"></i>
+                <i class="fa fa-fw fa-angle-down float-end mt-1 dropdown-icon"></i>
             </a>
             <ul class="collapse list-unstyled ps-4" id="collapseProducts">
                 <li>
-                    <a class="nav-link px-3 py-1 text-white" href="/admin/products/list">Danh sách sản phẩm</a>
+                    <a class="nav-link px-3 py-1 text-white rounded-start d-flex align-items-center" href="/admin/products/list">Danh sách sản phẩm</a>
                 </li>
                 <li>
-                    <a class="nav-link px-3 py-1 text-white" href="/admin/products/add">Thêm sản phẩm</a>
+                    <a class="nav-link px-3 py-1 text-white rounded-start d-flex align-items-center" href="/admin/products/add">Thêm sản phẩm</a>
                 </li>
             </ul>
         </li>
         <li class="nav-item">
-            <a class="nav-link px-3 py-2" href="/admin/orders/list">
+            <a class="nav-link px-3 py-2 rounded-start d-flex align-items-center" href="/admin/orders/list">
                 <i class="fa fa-fw fa-shopping-cart me-2"></i>
                 <span>Quản lý đơn hàng</span>
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link px-3 py-2" href="/admin/inventory/list">
+            <a class="nav-link px-3 py-2 rounded-start d-flex align-items-center" href="/admin/inventory/list">
                 <i class="fa fa-fw fa-warehouse me-2"></i>
                 <span>Quản lý kho hàng</span>
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link px-3 py-2" href="/admin/promotions/list">
+            <a class="nav-link px-3 py-2 rounded-start d-flex align-items-center" href="/admin/promotions/list">
                 <i class="fa fa-fw fa-tags me-2"></i>
                 <span>Quản lý khuyến mãi</span>
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link px-3 py-2" href="#collapseBlog" data-bs-toggle="collapse" aria-expanded="false" aria-controls="collapseBlog">
+            <a class="nav-link px-3 py-2 rounded-start d-flex align-items-center" href="#collapseBlog" data-bs-toggle="collapse" aria-expanded="false" aria-controls="collapseBlog">
                 <i class="fa fa-fw fa-file-text me-2"></i>
                 <span>Quản lý bài viết</span>
-                <i class="fa fa-fw fa-angle-down float-end mt-1"></i>
+                <i class="fa fa-fw fa-angle-down float-end mt-1 dropdown-icon"></i>
             </a>
             <ul class="collapse list-unstyled ps-4" id="collapseBlog">
                 <li>
-                    <a class="nav-link px-3 py-1 text-white" href="/admin/blog/list">Danh sách bài viết</a>
+                    <a class="nav-link px-3 py-1 text-white rounded-start d-flex align-items-center" href="/admin/blog/list">Danh sách bài viết</a>
                 </li>
                 <li>
-                    <a class="nav-link px-3 py-1 text-white" href="/admin/blog/add">Thêm bài viết</a>
+                    <a class="nav-link px-3 py-1 text-white rounded-start d-flex align-items-center" href="/admin/blog/add">Thêm bài viết</a>
                 </li>
             </ul>
         </li>
     </ul>
-    <!-- Sidenav Toggler -->
 </div>

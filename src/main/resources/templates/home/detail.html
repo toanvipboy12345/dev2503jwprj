@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout/user-base}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${product.name} + ' - Chi Tiết Sản Phẩm'">Chi Tiết Sản Phẩm</title>
+    <style>
+        .carousel-image {
+            height: 600px;
+            object-fit: cover; /* Đảm bảo ảnh lấp đầy khung, không để khoảng trắng */
+            object-position: center;
+        }
+        .thumbnail {
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.3s;
+        }
+        .thumbnail.active {
+            opacity: 1;
+            border: 2px solid #007bff;
+        }
+        .thumbnail img {
+            height: 80px;
+            object-fit: cover;
+        }
+        .carousel-control-prev,
+        .carousel-control-next {
+            width: 5%; /* Đảm bảo button next/prev hiển thị rõ ràng */
+            background: rgba(0, 0, 0, 0.3); /* Nền mờ để nổi bật */
+        }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content" class="container py-5">
+        <main>
+            <div class="container py-5">
+                <div class="row">
+                    <!-- Product Images -->
+                    <div class="col-md-6">
+                        <div id="productCarousel" class="carousel slide" data-bs-ride="carousel">
+                            <div class="carousel-inner">
+                                <!-- Main Image -->
+                                <div class="carousel-item active">
+                                    <img th:src="${product.image != null ? product.image : '/images/placeholder.jpg'}" 
+                                         class="d-block w-100 carousel-image" alt="Hình ảnh chính">
+                                </div>
+                                <!-- Additional Images -->
+                                <div class="carousel-item" th:each="image : ${product.images}">
+                                    <img th:src="${image.urlImg}" class="d-block w-100 carousel-image" alt="Hình ảnh phụ">
+                                </div>
+                            </div>
+                            <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Previous</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Next</span>
+                            </button>
+                        </div>
+                        <!-- Thumbnails -->
+                        <div class="row mt-2">
+                            <div class="col-3" th:if="${product.image != null}">
+                                <div class="thumbnail active" data-bs-target="#productCarousel" data-bs-slide-to="0">
+                                    <img th:src="${product.image}" class="w-100" alt="Hình ảnh chính">
+                                </div>
+                            </div>
+                            <div class="col-3" th:each="image, iterStat : ${product.images}">
+                                <div class="thumbnail" th:classappend="${iterStat.index == 0 ? 'active' : ''}" 
+                                     th:data-bs-target="'#productCarousel'" 
+                                     th:data-bs-slide-to="${iterStat.index + 1}">
+                                    <img th:src="${image.urlImg}" class="w-100" alt="Hình ảnh phụ">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Product Details -->
+                    <div class="col-md-6">
+                        <h1 th:text="${product.name}">Tên sách</h1>
+                        <p class="text-muted" th:text="'Danh mục: ' + ${product.categoryName}">Danh mục</p>
+                        <p class="text-danger fs-4 fw-bold" 
+                           th:text="${#numbers.formatInteger(product.price, 0, 'POINT')} + ' VNĐ'">Giá</p>
+                        <p class="text-muted" th:if="${product.quantity > 0}" 
+                           th:text="'Còn hàng: ' + ${product.quantity} + ' cuốn'">Số lượng</p>
+                        <p class="text-danger" th:if="${product.quantity <= 0}">Hết hàng</p>
+                        <!-- Configurations -->
+                        <div th:if="${#lists.isEmpty(product.configurations)} == false">
+                            <h5>Thông tin chi tiết</h5>
+                            <ul class="list-unstyled">
+                                <li th:each="config : ${product.configurations}">
+                                    <strong th:text="${config.configName} + ':'"></strong>
+                                    <span th:text="${config.value}"></span>
+                                </li>
+                            </ul>
+                        </div>
+                        <!-- Add to Cart Button -->
+                        <div class="mt-4">
+                            <form th:action="@{/cart/add}" method="post" th:if="${product.quantity > 0}">
+                                <input type="hidden" name="productId" th:value="${product.id}">
+                                <input type="number" name="quantity" value="1" min="1" th:max="${product.quantity}"
+                                       class="form-control w-25 d-inline me-2">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-cart-plus"></i> Thêm vào giỏ hàng
+                                </button>
+                            </form>
+                            <button class="btn btn-primary btn-lg" th:if="${product.quantity <= 0}" disabled>
+                                <i class="bi bi-cart-plus"></i> Thêm vào giỏ hàng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Tabs for Description and Contents -->
+                <div class="mt-5">
+                    <ul class="nav nav-tabs" id="productTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="description-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#description" type="button" role="tab" 
+                                    aria-controls="description" aria-selected="true">Mô tả</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="contents-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#contents" type="button" role="tab" 
+                                    aria-controls="contents" aria-selected="false">Nội dung sách</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="productTabContent">
+                        <div class="tab-pane fade show active" id="description" role="tabpanel" 
+                             aria-labelledby="description-tab">
+                            <div th:if="${product.description != null}" class="p-3">
+                                <h5>Mô tả</h5>
+                                <p th:utext="${product.description}">Mô tả sách</p>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="contents" role="tabpanel" 
+                             aria-labelledby="contents-tab">
+                            <div th:if="${product.contents != null}" class="p-3">
+                                <h5>Nội dung sách</h5>
+                                <div th:utext="${product.contents}"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

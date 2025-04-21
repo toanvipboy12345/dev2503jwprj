@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/admin-base}">
+<head>
+    <title>Sản Phẩm</title>
+</head>
+<body>
+    <div layout:fragment="content" class="container-fluid">
+        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}" style="display: none;"></div>
+        <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}" style="display: none;"></div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fa fa-search me-2"></i>Tìm Kiếm Sản Phẩm
+            </div>
+            <div class="card-body">
+                <form th:action="@{/admin/products/list}" method="get">
+                    <div class="input-group">
+                        <input type="text" name="keyword" class="form-control" th:value="${keyword}" placeholder="Tìm theo tên hoặc slug...">
+                        <button type="submit" class="btn btn-primary">Tìm</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fa fa-list me-2"></i>Danh Sách Sản Phẩm
+                <a th:href="@{/admin/products/add}" class="btn btn-success btn-sm float-end">Thêm Sản Phẩm</a>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên</th>
+                            <th>Hình Ảnh</th>
+                            <th>Slug</th>
+                            <th>Danh Mục</th>
+                            <th>Giá</th>
+                            <th>Số Lượng</th>
+                            <th>Trạng Thái</th>
+                            <th>Người Tạo</th>
+                            <th>Người Sửa</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="product : ${products}" th:data-id="${product.id}">
+                            <td th:text="${product.id}"></td>
+                            <td th:text="${product.name}"></td>
+                            <td>
+                                <div th:if="${product.image != null}">
+                                    <img th:src="@{${product.image}}" alt="Image" style="width: 150px; object-fit: cover;" />
+                                </div>
+                                <span th:if="${product.image == null}">Không có</span>
+                            </td>
+                            <td th:text="${product.slug}"></td>
+                            <td th:text="${product.categoryName}"></td>
+                            <td th:text="${product.price}"></td>
+                            <td th:text="${product.quantity}"></td>
+                            <td th:text="${product.isActive == 1} ? 'Hiển thị' : 'Ẩn'"></td>
+                            <td th:text="${product.createdBy != null && customerNames.containsKey(product.createdBy)} ? ${customerNames.get(product.createdBy)} : 'Không xác định'"></td>
+                            <td th:text="${product.updatedBy != null && customerNames.containsKey(product.updatedBy)} ? ${customerNames.get(product.updatedBy)} : 'Không xác định'"></td>
+                            <td>
+                                <button type="button" class="btn btn-warning btn-sm me-1 edit-product-btn"
+                                        th:data-id="${product.id}"
+                                        th:data-name="${product.name}"
+                                        th:data-slug="${product.slug}"
+                                        th:data-idcategory="${product.idCategory}"
+                                        th:data-categoryname="${product.categoryName}"
+                                        th:data-isactive="${product.isActive}"
+                                        th:data-image="${product.image}"
+                                        th:data-metatitle="${product.metaTitle}"
+                                        th:data-metakeyword="${product.metaKeyword}"
+                                        th:data-metadescription="${product.metaDescription}"
+                                        th:data-notes="${product.notes}"
+                                        th:data-description="${product.description}"
+                                        th:data-contents="${product.contents}"
+                                        th:data-price="${product.price}"
+                                        th:data-quantity="${product.quantity}"
+                                        th:data-isdelete="${product.isDelete}"
+                                        data-bs-toggle="modal" data-bs-target="#editProductModal">
+                                    Sửa
+                                </button>
+                                <button type="button" class="btn btn-danger btn-sm delete-product-btn" 
+                                        th:data-id="${product.id}" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#deleteConfirmationModal">
+                                    Xóa
+                                </button>
+                            </td>
+                        </tr>
+                        <tr th:if="${products.isEmpty()}">
+                            <td colspan="11" class="text-center">Không có sản phẩm nào.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editProductModalLabel">Sửa Sản Phẩm</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="modal-error" class="alert alert-danger d-none"></div>
+                        <form id="editProductForm" enctype="multipart/form-data">
+                            <input type="hidden" id="productId" name="id">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                            <input type="hidden" id="editIsDelete" name="isDelete" />
+                            <input type="hidden" id="deleteImageIds" name="deleteImageIds" />
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="editName" class="form-label">Tên Sản Phẩm</label>
+                                        <input type="text" class="form-control" id="editName" name="name" maxlength="500" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="editSlug" class="form-label">Slug</label>
+                                        <input type="text" class="form-control" id="editSlug" name="slug" maxlength="160" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="editIdCategory" class="form-label">Danh Mục</label>
+                                        <select class="form-control" id="editIdCategory" name="idCategory">
+                                            <option value="">Không có</option>
+                                            <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="editCategoryName" class="form-label">Tên Danh Mục</label>
+                                        <input type="text" class="form-control" id="editCategoryName" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="editIsActive" class="form-label">Trạng Thái</label>
+                                        <select class="form-control" id="editIsActive" name="isActive" required>
+                                            <option value="1">Hiển thị</option>
+                                            <option value="0">Ẩn</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="editPrice" class="form-label">Giá</label>
+                                        <input type="number" class="form-control" id="editPrice" name="price" step="0.01" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="editQuantity" class="form-label">Số Lượng</label>
+                                        <input type="number" class="form-control" id="editQuantity" name="quantity" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="editImageFile" class="form-label">Hình Ảnh Chính</label>
+                                        <input type="file" class="form-control" id="editImageFile" name="imageFile" accept="image/jpeg,image/png,image/gif,image/webp">
+                                        <div id="currentImage" class="mt-2 d-none">
+                                            <p>Hình ảnh hiện tại:</p>
+                                            <img id="currentImageImg" alt="Image" style="width: 100px; height: 100px; object-fit: cover;" />
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="editMetaTitle" class="form-label">Meta Title</label>
+                                        <input type="text" class="form-control" id="editMetaTitle" name="metaTitle" maxlength="100">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="editMetaKeyword" class="form-label">Meta Keyword</label>
+                                        <input type="text" class="form-control" id="editMetaKeyword" name="metaKeyword" maxlength="500">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="editMetaDescription" class="form-label">Meta Description</label>
+                                        <input type="text" class="form-control" id="editMetaDescription" name="metaDescription" maxlength="500">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="editDescription" class="form-label">Mô Tả</label>
+                                        <textarea class="form-control" id="editDescription" name="description" rows="3"></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="editContents" class="form-label">Nội Dung</label>
+                                        <textarea class="form-control" id="editContents" name="contents" rows="3"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Cấu Hình</label>
+                                <div id="configContainer"></div>
+                                <button type="button" id="addConfigBtn" class="btn btn-secondary btn-sm">Thêm Cấu Hình</button>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Ảnh Phụ</label>
+                                <div id="imageContainer"></div>
+                                <button type="button" id="addImageBtn" class="btn btn-secondary btn-sm">Thêm Ảnh Phụ</button>
+                            </div>
+                            <div class="mb-3">
+                                <label for="editNotes" class="form-label">Ghi Chú</label>
+                                <textarea class="form-control" id="editNotes" name="notes" rows="3"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-primary" id="saveProductBtn">Cập Nhật</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="successModalLabel">Thành công</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Cập nhật sản phẩm thành công!
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Đóng</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteConfirmationModalLabel">Xác nhận xóa</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Bạn có chắc muốn xóa sản phẩm này?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Xác nhận</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script th:inline="javascript">
+            window.customerNames = /*[[${customerNames}]]*/ {};
+            window.productsData = /*[[${products}]]*/ [];
+        </script>
+        <script th:src="@{/js/product/product.js}" defer></script>
+    </div>
+</body>
+</html>

@@ -1,5 +1,6 @@
 package com.devmaster.dev2503jwprj.config;
 
+import com.devmaster.dev2503jwprj.service.CartService;
 import com.devmaster.dev2503jwprj.service.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -23,6 +24,9 @@ public class SecurityConfig {
 
     @Autowired
     private CustomerService customerService;
+
+    @Autowired
+    private CartService cartService;
 
     @Bean
     public UserDetailsService userDetailsService() {
@@ -49,8 +53,7 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/admin/**").hasRole("ADMIN")
-                // Thêm /images/** vào danh sách được phép truy cập
-                .requestMatchers("/account/register", "/account/login", "/css/**", "/js/**", "/images/**").permitAll()
+                .requestMatchers("/account/register", "/account/login", "/css/**", "/js/**", "/images/**", "/products/**", "/home", "/cart/**").permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
@@ -66,7 +69,8 @@ public class SecurityConfig {
                     } else {
                         logger.info("Không có session sau khi đăng nhập.");
                     }
-
+                    // Đồng bộ giỏ hàng
+                    cartService.syncCartFromSession(request.getSession(), authentication);
                     if (authentication.getAuthorities().stream()
                             .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN"))) {
                         response.sendRedirect("/admin/dashboard");
