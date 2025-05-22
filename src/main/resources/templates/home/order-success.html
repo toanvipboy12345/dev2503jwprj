@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout/user-base}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:replace="~{layout/user-base :: title}">Đặt Hàng Thành Công</title>
+</head>
+<body>
+    <div layout:fragment="content" class="container mt-5">
+        <h1>Đặt Hàng Thành Công</h1>
+        <p>Cảm ơn bạn đã đặt hàng! Dưới đây là thông tin đơn hàng của bạn:</p>
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Mã đơn hàng: <span th:text="${order.idOrders}"></span></h5>
+                <p class="card-text">Ngày đặt: <span th:text="${#temporals.format(order.ordersDate, 'dd/MM/yyyy HH:mm')}"></span></p>
+                <p class="card-text">Tổng tiền: <span th:text="${#numbers.formatDecimal(order.totalMoney, 1, 2, 'COMMA')}"></span> VND</p>
+                <p class="card-text">Phương thức thanh toán: <span th:text="${order.paymentMethodName}"></span></p>
+                <p class="card-text">Phương thức vận chuyển: <span th:text="${order.transportMethodName}"></span></p>
+                <p class="card-text">Người nhận: <span th:text="${order.nameReceiver}"></span></p>
+                <p class="card-text">Địa chỉ: <span th:text="${order.address}"></span></p>
+                <p class="card-text">Email: <span th:text="${order.email}"></span></p>
+                <p class="card-text">Số điện thoại: <span th:text="${order.phone}"></span></p>
+            </div>
+        </div>
+        <a th:href="@{/products}" class="btn btn-primary mt-3">Tiếp tục mua sắm</a>
+    </div>
+</body>
+</html>

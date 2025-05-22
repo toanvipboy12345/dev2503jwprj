@@ -1,0 +1,201 @@
+<!-- <!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout/user-base}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:replace="~{layout/user-base :: title}">Thanh Toán</title>
+    <script>
+        function submitForm() {
+            var paymentMethodId = document.querySelector('select[name="paymentMethodId"]').value;
+            var transportMethodId = document.querySelector('select[name="transportMethodId"]').value;
+            var nameReceiver = document.querySelector('input[name="nameReceiver"]').value;
+            var address = document.querySelector('input[name="address"]').value;
+            var email = document.querySelector('input[name="email"]').value;
+            var phone = document.querySelector('input[name="phone"]').value;
+            var form = document.querySelector('form');
+            var csrfInput = document.querySelector('input[name="_csrf"]');
+            var csrfToken = csrfInput ? csrfInput.value : null;
+
+            console.log("paymentMethodId:", paymentMethodId);
+            console.log("transportMethodId:", transportMethodId);
+            console.log("nameReceiver:", nameReceiver);
+            console.log("address:", address);
+            console.log("email:", email);
+            console.log("phone:", phone);
+            console.log("CSRF Token:", csrfToken);
+            console.log("Form action:", form.getAttribute('action'));
+
+            if (!csrfToken || csrfToken === "") {
+                console.error("CSRF token is missing or empty!");
+                alert("CSRF token bị mất! Vui lòng làm mới trang và thử lại.");
+                return;
+            }
+
+            if (!paymentMethodId || paymentMethodId === "") {
+                alert("Vui lòng chọn phương thức thanh toán!");
+                return;
+            }
+            if (!transportMethodId || transportMethodId === "") {
+                alert("Vui lòng chọn phương thức vận chuyển!");
+                return;
+            }
+            if (!nameReceiver || nameReceiver.trim() === "") {
+                alert("Vui lòng nhập họ tên người nhận!");
+                return;
+            }
+            if (!address || address.trim() === "") {
+                alert("Vui lòng nhập địa chỉ!");
+                return;
+            }
+            if (!email || email.trim() === "") {
+                alert("Vui lòng nhập email!");
+                return;
+            }
+            if (!phone || phone.trim() === "") {
+                alert("Vui lòng nhập số điện thoại!");
+                return;
+            }
+
+            console.log("Submitting form to /orders/submit");
+            try {
+                form.submit();
+                console.log("Form submitted successfully!");
+                alert("Form đã được submit với CSRF token: " + csrfToken);
+            } catch (e) {
+                console.error("Error submitting form:", e);
+                alert("Lỗi khi gửi form: " + e.message);
+            }
+        }
+    </script>
+</head>
+<body>
+    <div layout:fragment="content" class="container mt-5">
+        <h1>Thanh Toán Đơn Hàng</h1>
+        <form method="post" th:action="@{/orders/submit}" th:object="${orderForm}">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <div class="row">
+                <div class="col-md-6">
+                    <h3>Thông tin người nhận</h3>
+                    <div class="mb-3">
+                        <label for="nameReceiver" class="form-label">Họ tên</label>
+                        <input type="text" class="form-control" id="nameReceiver" name="nameReceiver" th:value="${customer.name}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Địa chỉ</label>
+                        <input type="text" class="form-control" id="address" name="address" th:value="${customer.address}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" th:value="${customer.email}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Số điện thoại</label>
+                        <input type="text" class="form-control" id="phone" name="phone" th:value="${customer.phone}" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h3>Giỏ hàng</h3>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th>Số lượng</th>
+                                <th>Giá</th>
+                                <th>Tổng</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="item : ${cartItems}">
+                                <td th:text="${item.product.name}"></td>
+                                <td th:text="${item.quantity}"></td>
+                                <td th:text="${#numbers.formatDecimal(item.product.price, 1, 2, 'COMMA')}"></td>
+                                <td th:text="${#numbers.formatDecimal(item.product.price * item.quantity, 1, 2, 'COMMA')}"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h3>Phương thức thanh toán</h3>
+                    <select class="form-select mb-3" name="paymentMethodId" required>
+                        <option value="" disabled selected>Chọn phương thức thanh toán</option>
+                        <option th:each="method : ${paymentMethods}" th:value="${method.id}" th:text="${method.name}"></option>
+                    </select>
+                    <h3>Phương thức vận chuyển</h3>
+                    <select class="form-select mb-3" name="transportMethodId" required>
+                        <option value="" disabled selected>Chọn phương thức vận chuyển</option>
+                        <option th:each="method : ${transportMethods}" th:value="${method.id}" th:text="${method.name}"></option>
+                    </select>
+                </div>
+            </div>
+            <button type="button" class="btn btn-primary mt-3" onclick="submitForm()">Đặt Hàng</button>
+        </form>
+    </div>
+</body>
+</html> -->
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout/user-base}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:replace="~{layout/user-base :: title}">Thanh Toán</title>
+</head>
+<body>
+    <div layout:fragment="content" class="container mt-5">
+        <h1>Thanh Toán Đơn Hàng</h1>
+        <form method="post" th:action="@{/orders/submit}" th:object="${orderForm}">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <div class="row">
+                <div class="col-md-6">
+                    <h3>Thông tin người nhận</h3>
+                    <div class="mb-3">
+                        <label for="nameReceiver" class="form-label">Họ tên</label>
+                        <input type="text" class="form-control" id="nameReceiver" name="nameReceiver" th:value="${customer.name}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Địa chỉ</label>
+                        <input type="text" class="form-control" id="address" name="address" th:value="${customer.address}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" th:value="${customer.email}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Số điện thoại</label>
+                        <input type="text" class="form-control" id="phone" name="phone" th:value="${customer.phone}" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h3>Giỏ hàng</h3>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th>Số lượng</th>
+                                <th>Giá</th>
+                                <th>Tổng</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="item : ${cartItems}">
+                                <td th:text="${item.product.name}"></td>
+                                <td th:text="${item.quantity}"></td>
+                                <td th:text="${#numbers.formatDecimal(item.product.price, 1, 2, 'COMMA')}"></td>
+                                <td th:text="${#numbers.formatDecimal(item.product.price * item.quantity, 1, 2, 'COMMA')}"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h3>Phương thức thanh toán</h3>
+                    <select class="form-select mb-3" name="paymentMethodId" required>
+                        <option value="" disabled selected>Chọn phương thức thanh toán</option>
+                        <option th:each="method : ${paymentMethods}" th:value="${method.id}" th:text="${method.name}"></option>
+                    </select>
+                    <h3>Phương thức vận chuyển</h3>
+                    <select class="form-select mb-3" name="transportMethodId" required>
+                        <option value="" disabled selected>Chọn phương thức vận chuyển</option>
+                        <option th:each="method : ${transportMethods}" th:value="${method.id}" th:text="${method.name}"></option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">Đặt Hàng</button>
+        </form>
+    </div>
+</body>
+</html>

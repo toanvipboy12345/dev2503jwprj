@@ -20,12 +20,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.multipart.MultipartFile;
-
+import com.devmaster.dev2503jwprj.entity.InventoryTransaction;
+import com.devmaster.dev2503jwprj.repository.InventoryTransactionRepository;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -53,10 +55,13 @@ public class ProductService {
     @Autowired
     private CustomerService customerService;
 
+    @Autowired
+    private InventoryTransactionRepository inventoryTransactionRepository;
+
     private static final String UPLOAD_DIR = "src/main/resources/static/images/products/";
     private static final String IMAGE_URL_PREFIX = "/images/products/";
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-    private static final String[] ALLOWED_FILE_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}; // Thêm image/webp
+    private static final String[] ALLOWED_FILE_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"};
 
     @PostConstruct
     public void init() throws IOException {
@@ -66,11 +71,21 @@ public class ProductService {
         }
     }
 
-    public List<ProductDTO> getAllProducts() {
-        return productRepository.findByIsDeleteFalse().stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+public List<ProductDTO> getAllProducts() {
+    List<Product> products = productRepository.findByIsDeleteFalse();
+    System.out.println("Products found: " + products.size());
+    products.forEach(p -> System.out.println("Product ID: " + p.getId() + ", Name: " + p.getName() + ", Quantity: " + p.getQuantity()));
+    List<ProductDTO> productDTOs = new ArrayList<>();
+    for (Product p : products) {
+        try {
+            productDTOs.add(toDTO(p));
+        } catch (Exception e) {
+            System.err.println("Error mapping product ID " + p.getId() + ": " + e.getMessage());
+        }
     }
+    System.out.println("ProductDTOs created: " + productDTOs.size());
+    return productDTOs;
+}
 
     public Optional<ProductDTO> getProductById(Long id) {
         return productRepository.findById(id)
@@ -117,6 +132,18 @@ public class ProductService {
         product.setIsActive((byte) 1);
         product = productRepository.save(product);
 
+        if (productDTO.getQuantity() != null && productDTO.getQuantity() > 0) {
+            InventoryTransaction transaction = InventoryTransaction.builder()
+                    .productId(product.getId())
+                    .transactionType("STOCK_IN")
+                    .quantity(productDTO.getQuantity())
+                    .reason("Nhập kho khi tạo sản phẩm")
+                    .createdDate(LocalDateTime.now())
+                    .createdBy(getCurrentUserId())
+                    .build();
+            inventoryTransactionRepository.save(transaction);
+        }
+
         saveConfigurations(product.getId(), productDTO.getConfigurations());
         saveAdditionalImages(product.getId(), additionalImageFiles);
     }
@@ -124,8 +151,8 @@ public class ProductService {
     @Transactional
     public void updateProduct(@Valid ProductDTO productDTO, MultipartFile imageFile, List<MultipartFile> additionalImageFiles, List<Long> deleteImageIds) throws IOException {
         Optional<Product> existingProductOpt = productRepository.findById(productDTO.getId());
-        if (!existingProductOpt.isPresent()) {
-            throw new IllegalArgumentException("Sản phẩm không tồn tại");
+        if (!existingProductOpt.isPresent() || existingProductOpt.get().getIsDelete() == 1) {
+            throw new IllegalArgumentException("Sản phẩm không tồn tại hoặc đã bị xóa");
         }
 
         Product existingProduct = existingProductOpt.get();
@@ -162,12 +189,10 @@ public class ProductService {
         productConfigRepository.deleteByIdProduct(product.getId());
         saveConfigurations(product.getId(), productDTO.getConfigurations());
 
-        // Xóa các ảnh phụ được chọn
         if (deleteImageIds != null && !deleteImageIds.isEmpty()) {
             deleteImagesByIds(deleteImageIds);
         }
 
-        // Lưu các ảnh phụ mới
         saveAdditionalImages(product.getId(), additionalImageFiles);
     }
 
@@ -178,7 +203,6 @@ public class ProductService {
                     Path filePath = Paths.get(UPLOAD_DIR, image.getUrlImg().replace(IMAGE_URL_PREFIX, ""));
                     Files.deleteIfExists(filePath);
                 } catch (IOException e) {
-                    // Log lỗi nhưng không làm gián đoạn quá trình
                     System.err.println("Không thể xóa file ảnh: " + e.getMessage());
                 }
                 productImagesRepository.deleteById(imageId);
@@ -189,13 +213,10 @@ public class ProductService {
     @Transactional
     public void deleteProduct(Long id) {
         Optional<Product> productOpt = productRepository.findById(id);
-        if (!productOpt.isPresent()) {
-            throw new IllegalArgumentException("Sản phẩm không tồn tại");
+        if (!productOpt.isPresent() || productOpt.get().getIsDelete() == 1) {
+            throw new IllegalArgumentException("Sản phẩm không tồn tại hoặc đã bị xóa");
         }
         Product product = productOpt.get();
-        if (product.getIsDelete() == 1) {
-            throw new IllegalArgumentException("Sản phẩm đã bị xóa trước đó");
-        }
         product.setIsDelete((byte) 1);
         product.setUpdatedDate(LocalDateTime.now());
         product.setUpdatedBy(getCurrentUserId());
@@ -211,7 +232,6 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
-    // Phương thức validateImageFile
     private void validateImageFile(MultipartFile file) {
         if (file.getSize() > MAX_FILE_SIZE) {
             throw new IllegalArgumentException("Kích thước file không được vượt quá 5MB");
@@ -234,18 +254,16 @@ public class ProductService {
             for (ProductDTO.ProductConfigDTO configDTO : configDTOs) {
                 if (configDTO.getConfigName() != null && !configDTO.getConfigName().trim().isEmpty() &&
                     configDTO.getValue() != null && !configDTO.getValue().trim().isEmpty()) {
-                    // Tìm hoặc tạo cấu hình mới trong bảng CONFIGURATIONS
                     Configurations configEntity = configurationsRepository.findByNameAndIsDeleteFalse(configDTO.getConfigName())
                             .orElseGet(() -> {
                                 Configurations newConfig = Configurations.builder()
                                         .name(configDTO.getConfigName())
-                                        .notes(configDTO.getNotes() != null ? configDTO.getNotes() : "") // Sử dụng notes hoặc chuỗi rỗng
+                                        .notes(configDTO.getNotes() != null ? configDTO.getNotes() : "")
                                         .isDelete((byte) 0)
                                         .isActive((byte) 1)
                                         .build();
                                 return configurationsRepository.save(newConfig);
                             });
-                    // Lưu cấu hình vào bảng PRODUCT_CONFIG
                     ProductConfig config = ProductConfig.builder()
                             .idProduct(productId)
                             .idConfig(configEntity.getId())
@@ -276,58 +294,58 @@ public class ProductService {
         }
     }
 
-    private ProductDTO toDTO(Product product) {
-        List<ProductDTO.ProductConfigDTO> configDTOs = productConfigRepository.findByIdProduct(product.getId()).stream()
-                .map(config -> {
-                    Optional<Configurations> configEntity = configurationsRepository.findById(config.getIdConfig());
-                    return ProductDTO.ProductConfigDTO.builder()
-                            .id(config.getId())
-                            .idConfig(config.getIdConfig())
-                            .configName(configEntity.map(Configurations::getName).orElse("Unknown"))
-                            .value(config.getValue())
-                            .build();
-                })
-                .collect(Collectors.toList());
+private ProductDTO toDTO(Product product) {
+    List<ProductDTO.ProductConfigDTO> configDTOs = productConfigRepository.findByIdProduct(product.getId()).stream()
+            .map(config -> {
+                Optional<Configurations> configEntity = configurationsRepository.findById(config.getIdConfig());
+                return ProductDTO.ProductConfigDTO.builder()
+                        .id(config.getId())
+                        .idConfig(config.getIdConfig())
+                        .configName(configEntity.map(Configurations::getName).orElse("Unknown"))
+                        .value(config.getValue())
+                        .build();
+            })
+            .collect(Collectors.toList());
 
-        List<ProductDTO.ProductImageDTO> imageDTOs = productImagesRepository.findByIdProduct(product.getId()).stream()
-                .map(image -> ProductDTO.ProductImageDTO.builder()
-                        .id(image.getId())
-                        .name(image.getName())
-                        .urlImg(image.getUrlImg())
-                        .build())
-                .collect(Collectors.toList());
+    List<ProductDTO.ProductImageDTO> imageDTOs = productImagesRepository.findByIdProduct(product.getId()).stream()
+            .map(image -> ProductDTO.ProductImageDTO.builder()
+                    .id(image.getId())
+                    .name(image.getName())
+                    .urlImg(image.getUrlImg())
+                    .build())
+            .collect(Collectors.toList());
 
-        String categoryName = product.getIdCategory() != null
-                ? categoryRepository.findById(product.getIdCategory())
-                        .map(Category::getName)
-                        .orElse("Không có")
-                : "Không có";
+    String categoryName = product.getIdCategory() != null
+            ? categoryRepository.findById(product.getIdCategory())
+                    .map(Category::getName)
+                    .orElse("Không có")
+            : "Không có";
 
-        return ProductDTO.builder()
-                .id(product.getId())
-                .name(product.getName())
-                .description(product.getDescription())
-                .notes(product.getNotes())
-                .image(product.getImage())
-                .idCategory(product.getIdCategory())
-                .categoryName(categoryName)
-                .contents(product.getContents())
-                .price(product.getPrice())
-                .quantity(product.getQuantity())
-                .slug(product.getSlug())
-                .metaTitle(product.getMetaTitle())
-                .metaKeyword(product.getMetaKeyword())
-                .metaDescription(product.getMetaDescription())
-                .createdDate(product.getCreatedDate())
-                .updatedDate(product.getUpdatedDate())
-                .createdBy(product.getCreatedBy())
-                .updatedBy(product.getUpdatedBy())
-                .isDelete(product.getIsDelete())
-                .isActive(product.getIsActive())
-                .configurations(configDTOs)
-                .images(imageDTOs)
-                .build();
-    }
+    return ProductDTO.builder()
+            .id(product.getId())
+            .name(product.getName() != null ? product.getName() : "Không xác định")
+            .description(product.getDescription())
+            .notes(product.getNotes())
+            .image(product.getImage())
+            .idCategory(product.getIdCategory())
+            .categoryName(categoryName)
+            .contents(product.getContents())
+            .price(product.getPrice())
+            .quantity(product.getQuantity() != null ? product.getQuantity() : 0)
+            .slug(product.getSlug())
+            .metaTitle(product.getMetaTitle())
+            .metaKeyword(product.getMetaKeyword())
+            .metaDescription(product.getMetaDescription())
+            .createdDate(product.getCreatedDate())
+            .updatedDate(product.getUpdatedDate())
+            .createdBy(product.getCreatedBy())
+            .updatedBy(product.getUpdatedBy())
+            .isDelete(product.getIsDelete())
+            .isActive(product.getIsActive())
+            .configurations(configDTOs)
+            .images(imageDTOs)
+            .build();
+}
 
     private Product toEntity(ProductDTO dto) {
         return Product.builder()
@@ -351,5 +369,81 @@ public class ProductService {
                 .isDelete(dto.getIsDelete())
                 .isActive(dto.getIsActive())
                 .build();
+    }
+
+    @Transactional
+    public void stockIn(Long productId, Integer quantity, String reason) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Số lượng nhập kho phải lớn hơn 0");
+        }
+        Product product = productRepository.findById(productId)
+                .filter(p -> p.getIsDelete() == 0)
+                .orElseThrow(() -> new IllegalArgumentException("Sản phẩm không tồn tại hoặc đã bị xóa"));
+        product.setQuantity(product.getQuantity() + quantity);
+        product.setUpdatedDate(LocalDateTime.now());
+        product.setUpdatedBy(getCurrentUserId());
+        productRepository.save(product);
+
+        InventoryTransaction transaction = InventoryTransaction.builder()
+                .productId(productId)
+                .transactionType("STOCK_IN")
+                .quantity(quantity)
+                .reason(reason)
+                .createdDate(LocalDateTime.now())
+                .createdBy(getCurrentUserId())
+                .build();
+        inventoryTransactionRepository.save(transaction);
+    }
+
+    @Transactional
+    public void stockOut(Long productId, Integer quantity, String reason) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Số lượng xuất kho phải lớn hơn 0");
+        }
+        Product product = productRepository.findById(productId)
+                .filter(p -> p.getIsDelete() == 0)
+                .orElseThrow(() -> new IllegalArgumentException("Sản phẩm không tồn tại hoặc đã bị xóa"));
+        if (product.getQuantity() < quantity) {
+            throw new IllegalArgumentException("Không đủ hàng trong kho");
+        }
+        product.setQuantity(product.getQuantity() - quantity);
+        product.setUpdatedDate(LocalDateTime.now());
+        product.setUpdatedBy(getCurrentUserId());
+        productRepository.save(product);
+
+        InventoryTransaction transaction = InventoryTransaction.builder()
+                .productId(productId)
+                .transactionType("STOCK_OUT")
+                .quantity(-quantity)
+                .reason(reason)
+                .createdDate(LocalDateTime.now())
+                .createdBy(getCurrentUserId())
+                .build();
+        inventoryTransactionRepository.save(transaction);
+    }
+
+    @Transactional
+    public void adjustStock(Long productId, Integer quantity, String reason) {
+        Product product = productRepository.findById(productId)
+                .filter(p -> p.getIsDelete() == 0)
+                .orElseThrow(() -> new IllegalArgumentException("Sản phẩm không tồn tại hoặc đã bị xóa"));
+        int newQuantity = product.getQuantity() + quantity;
+        if (newQuantity < 0) {
+            throw new IllegalArgumentException("Số lượng kho không thể âm");
+        }
+        product.setQuantity(newQuantity);
+        product.setUpdatedDate(LocalDateTime.now());
+        product.setUpdatedBy(getCurrentUserId());
+        productRepository.save(product);
+
+        InventoryTransaction transaction = InventoryTransaction.builder()
+                .productId(productId)
+                .transactionType("ADJUSTMENT")
+                .quantity(quantity)
+                .reason(reason)
+                .createdDate(LocalDateTime.now())
+                .createdBy(getCurrentUserId())
+                .build();
+        inventoryTransactionRepository.save(transaction);
     }
 }

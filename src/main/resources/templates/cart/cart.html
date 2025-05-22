@@ -1,68 +1,112 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout/user-base}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html
+  lang="vi"
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+  layout:decorate="~{layout/user-base}"
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Giỏ Hàng</title>
     <script th:src="@{/js/cart/cart.js}"></script>
-</head>
-<body>
+  </head>
+  <body>
     <div layout:fragment="content" class="container py-5">
-        <h2 class="mb-4">Giỏ Hàng</h2>
-        <!-- Hiển thị thông báo -->
-        <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
-        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
-        <!-- Nội dung giỏ hàng -->
-        <div th:if="${cartItems.isEmpty()}">
-            <p class="text-muted">Giỏ hàng của bạn đang trống.</p>
-            <a href="/products" class="btn btn-primary">Tiếp tục mua sắm</a>
+      <h2 class="mb-4">Giỏ Hàng</h2>
+      <!-- Hiển thị thông báo -->
+      <div
+        th:if="${message}"
+        class="alert alert-success"
+        th:text="${message}"
+      ></div>
+      <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+      <!-- Nội dung giỏ hàng -->
+      <div th:if="${cartItems.isEmpty()}">
+        <p class="text-muted">Giỏ hàng của bạn đang trống.</p>
+        <a href="/products" class="btn btn-primary">Tiếp tục mua sắm</a>
+      </div>
+      <div th:if="${!cartItems.isEmpty()}">
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Hình ảnh</th>
+              <th>Sản phẩm</th>
+              <th>Giá</th>
+              <th>Số lượng</th>
+              <th>Tổng</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="item : ${cartItems}">
+              <td>
+                <img
+                  th:src="${item.image != null ? item.image : '/images/placeholder.jpg'}"
+                  alt="Hình ảnh sản phẩm"
+                  style="width: 80px; height: auto"
+                />
+              </td>
+              <td th:text="${item.productName}"></td>
+              <td
+                th:text="${#numbers.formatDecimal(item.price, 0, 0, 'POINT')} + ' VNĐ'"
+              ></td>
+              <td>
+                <form th:action="@{/cart/update}" method="post">
+                  <input
+                    type="hidden"
+                    name="productId"
+                    th:value="${item.productId}"
+                  />
+                  <label
+                    th:for="'quantity-' + ${item.productId}"
+                    class="visually-hidden"
+                    >Số lượng</label
+                  >
+                  <input
+                    type="number"
+                    th:id="'quantity-' + ${item.productId}"
+                    name="quantity"
+                    th:value="${item.quantity}"
+                    min="1"
+                    class="form-control w-25 d-inline"
+                    title="Nhập số lượng sản phẩm"
+                    placeholder="Số lượng"
+                  />
+                  <button type="submit" class="btn btn-sm btn-primary ms-2">
+                    Cập nhật
+                  </button>
+                </form>
+              </td>
+              <td
+                th:text="${#numbers.formatDecimal(item.price.multiply(item.quantity), 0, 0, 'POINT')} + ' VNĐ'"
+              ></td>
+              <td>
+                <form th:action="@{/cart/remove}" method="post">
+                  <input
+                    type="hidden"
+                    name="productId"
+                    th:value="${item.productId}"
+                  />
+                  <button type="submit" class="btn btn-sm btn-danger">
+                    Xóa
+                  </button>
+                </form>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="text-end">
+          <h4>
+            Tổng cộng:
+            <span
+              th:text="${#numbers.formatDecimal(totalPrice, 0, 0, 'POINT')} + ' VNĐ'"
+            ></span>
+          </h4>
+          <a href="/products" class="btn btn-secondary">Tiếp tục mua sắm</a>
+          <a th:href="@{/orders/checkout}" class="btn btn-primary">Đặt hàng</a>
         </div>
-        <div th:if="${!cartItems.isEmpty()}">
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th>Hình ảnh</th>
-                        <th>Sản phẩm</th>
-                        <th>Giá</th>
-                        <th>Số lượng</th>
-                        <th>Tổng</th>
-                        <th>Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="item : ${cartItems}">
-                        <td>
-                            <img th:src="${item.image != null ? item.image : '/images/placeholder.jpg'}"
-                                 alt="Hình ảnh sản phẩm" style="width: 80px; height: auto;">
-                        </td>
-                        <td th:text="${item.productName}"></td>
-                        <td th:text="${#numbers.formatDecimal(item.price, 0, 0, 'POINT')} + ' VNĐ'"></td>
-                        <td>
-                            <form th:action="@{/cart/update}" method="post">
-                                <input type="hidden" name="productId" th:value="${item.productId}">
-                                <label th:for="'quantity-' + ${item.productId}" class="visually-hidden">Số lượng</label>
-                                <input type="number" th:id="'quantity-' + ${item.productId}" name="quantity" th:value="${item.quantity}"
-                                       min="1" class="form-control w-25 d-inline" title="Nhập số lượng sản phẩm" placeholder="Số lượng">
-                                <button type="submit" class="btn btn-sm btn-primary ms-2">Cập nhật</button>
-                            </form>
-                        </td>
-                        <td th:text="${#numbers.formatDecimal(item.price.multiply(item.quantity), 0, 0, 'POINT')} + ' VNĐ'"></td>
-                        <td>
-                            <form th:action="@{/cart/remove}" method="post">
-                                <input type="hidden" name="productId" th:value="${item.productId}">
-                                <button type="submit" class="btn btn-sm btn-danger">Xóa</button>
-                            </form>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <div class="text-end">
-                <h4>Tổng cộng: <span th:text="${#numbers.formatDecimal(totalPrice, 0, 0, 'POINT')} + ' VNĐ'"></span></h4>
-                <a href="/products" class="btn btn-secondary">Tiếp tục mua sắm</a>
-                <a href="/checkout" class="btn btn-primary">Đặt hàng</a>
-            </div>
-        </div>
+      </div>
     </div>
-</body>
+  </body>
 </html>

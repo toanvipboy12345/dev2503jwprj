@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/admin-base}">
+<head>
+    <title>Quản Lý Kho</title>
+</head>
+<body>
+    <div layout:fragment="content" class="container-fluid">
+        <h1 class="h3 mb-4 text-gray-800" th:text="${breadcrumb}"></h1>
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Danh Sách Kho</h6>
+            </div>
+            <div class="card-body">
+                <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+                <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên Sản Phẩm</th>
+                            <th>Danh Mục</th>
+                            <th>Số Lượng</th>
+                            <th>Trạng Thái</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="product : ${products}" th:if="${product != null}">
+                            <td th:text="${product.id} ?: 'N/A'"></td>
+                            <td th:text="${product.name} ?: 'Không xác định'"></td>
+                            <td th:text="${product.categoryName} ?: 'Không có'"></td>
+                            <td th:text="${product.quantity} ?: 0"></td>
+                            <td>
+                                <span th:if="${product.quantity == null}" class="text-danger">Không xác định</span>
+                                <span th:if="${product.quantity != null and product.quantity == 0}" class="text-danger">Hết hàng</span>
+                                <span th:if="${product.quantity != null and product.quantity > 0 and product.quantity <= 10}" class="text-warning">Sắp hết</span>
+                                <span th:if="${product.quantity != null and product.quantity > 10}" class="text-success">Bình thường</span>
+                            </td>
+                            <td>
+                                <a th:href="@{/admin/inventory/stock-in(productId=${product.id})}" class="btn btn-primary btn-sm" th:if="${product.id != null}">Nhập Kho</a>
+                                <a th:href="@{/admin/inventory/adjust(productId=${product.id})}" class="btn btn-warning btn-sm" th:if="${product.id != null}">Điều Chỉnh</a>
+                            </td>
+                        </tr>
+                        <tr th:if="${products.isEmpty()}">
+                            <td colspan="6" class="text-center">Không có sản phẩm nào.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

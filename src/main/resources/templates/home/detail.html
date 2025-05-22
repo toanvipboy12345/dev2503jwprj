@@ -6,34 +6,327 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${product.name} + ' - Chi Tiết Sản Phẩm'">Chi Tiết Sản Phẩm</title>
     <style>
+        /* General Styling */
+        .custom-container {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        .py-5 {
+            padding-top: 3rem !important;
+            padding-bottom: 3rem !important;
+        }
+        .container.py-5 {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            padding: 2rem !important;
+        }
+        h1 {
+            font-size: 2.25rem;
+            color: #1e3a8a;
+            margin-bottom: 1rem;
+            transition: color 0.3s ease;
+        }
+        h1:hover {
+            color: #1557a1;
+        }
+
+        /* Breadcrumb Styling */
+        #e2ebf6 {
+            background-color: #e2ebf6;
+            width: 100%;
+            margin: 0;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #d1d9e6;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+        }
+        #e2ebf6 .breadcrumb-wrapper {
+            width: auto;
+            padding: 0 15px;
+        }
+        .breadcrumb {
+            margin-bottom: 0;
+            background-color: transparent;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+        .breadcrumb-item a {
+            color: #1e3a8a;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        .breadcrumb-item a:hover {
+            color: #1557a1;
+            text-decoration: underline;
+        }
+        .breadcrumb-item.active {
+            color: #495057;
+            font-weight: 500;
+        }
+        .breadcrumb-item + .breadcrumb-item::before {
+            color: #6c757d;
+        }
+
+        /* Carousel and Thumbnails */
         .carousel-image {
             height: 600px;
-            object-fit: cover; /* Đảm bảo ảnh lấp đầy khung, không để khoảng trắng */
+            object-fit: cover;
             object-position: center;
+            transition: transform 0.5s ease;
+            cursor: pointer;
+            width: 100%;
+        }
+        .carousel-item {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .carousel-image:hover {
+            transform: scale(1.05);
         }
         .thumbnail {
             cursor: pointer;
-            opacity: 0.6;
-            transition: opacity 0.3s;
+            opacity: 0.7;
+            transition: opacity 0.3s, transform 0.3s;
+            border: 2px solid transparent;
+            border-radius: 5px;
+            overflow: hidden;
         }
         .thumbnail.active {
             opacity: 1;
-            border: 2px solid #007bff;
+            border-color: #1e3a8a;
+            transform: scale(1.05);
+        }
+        .thumbnail:hover {
+            opacity: 1;
+            transform: scale(1.05);
         }
         .thumbnail img {
-            height: 80px;
-            object-fit: cover;
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            object-position: center;
         }
-        .carousel-control-prev,
-        .carousel-control-next {
-            width: 5%; /* Đảm bảo button next/prev hiển thị rõ ràng */
-            background: rgba(0, 0, 0, 0.3); /* Nền mờ để nổi bật */
+
+        /* Product Details */
+        .text-muted {
+            font-size: 0.9rem;
+            color: #6c757d !important;
+        }
+        .text-danger.fs-4.fw-bold {
+            color: #dc3545 !important;
+            font-size: 2rem !important;
+            background-color: #fff3f4;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            display: inline-block;
+            transition: background-color 0.3s ease;
+        }
+        .text-danger.fs-4.fw-bold:hover {
+            background-color: #ffe3e5;
+        }
+        .text-danger {
+            font-weight: 600;
+            color: #dc3545 !important;
+        }
+        .configurations-list {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            border-left: 4px solid #1e3a8a;
+        }
+        .configurations-list li {
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+        .configurations-list strong {
+            color: #1e3a8a;
+        }
+        .quantity-input {
+            border-color: #ced4da;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .quantity-input:focus {
+            border-color: #1e3a8a;
+            box-shadow: 0 0 5px rgba(30, 58, 138, 0.3);
+        }
+        .btn-primary {
+            background-color: #1e3a8a;
+            border-color: #1e3a8a;
+            padding: 0.75rem 1.5rem;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #1557a1;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(30, 58, 138, 0.3);
+        }
+        .btn-primary:disabled {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            transform: none;
+            box-shadow: none;
+        }
+        .btn-primary i {
+            margin-right: 0.5rem;
+        }
+
+        /* Modal */
+        .modal-content {
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+        .modal-header {
+            background-color: #28a745;
+            color: #ffffff;
+            border-bottom: none;
+            border-radius: 15px 15px 0 0;
+            padding: 1.5rem;
+        }
+        .modal-header h5::before {
+            content: "\f058";
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            margin-right: 0.5rem;
+            color: #ffffff;
+        }
+        .modal-body {
+            padding: 1.5rem;
+            font-size: 1rem;
+            color: #495057;
+        }
+        .modal-footer {
+            border-top: none;
+            padding: 1rem 1.5rem;
+        }
+        .modal-footer .btn-primary {
+            background-color: #1e3a8a;
+            border-color: #1e3a8a;
+        }
+        .modal-footer .btn-primary:hover {
+            background-color: #1557a1;
+        }
+        .modal-footer .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+        .modal-footer .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        /* Alert */
+        .alert-danger {
+            border-left: 5px solid #dc3545;
+            background-color: #fff3f4;
+            color: #dc3545;
+            padding: 1rem 1.5rem;
+            border-radius: 5px;
+            animation: slideIn 0.5s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Tabs */
+        .nav-tabs {
+            border-bottom: 2px solid #dee2e6;
+        }
+        .nav-tabs .nav-link {
+            color: #495057;
+            border: none;
+            border-bottom: 2px solid transparent;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            transition: color 0.3s ease, border-color 0.3s ease;
+        }
+        .nav-tabs .nav-link.active {
+            color: #1e3a8a;
+            border-bottom-color: #1e3a8a;
+            background-color: transparent;
+            font-weight: 600;
+        }
+        .nav-tabs .nav-link:hover {
+            color: #1557a1;
+            border-bottom-color: #1557a1;
+        }
+        .tab-content {
+            background-color: #f8f9fa;
+            border-radius: 0 0 5px 5px;
+            padding: 0;
+        }
+        .tab-pane {
+            padding: 2rem;
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+            transition: opacity 0.3s ease;
+        }
+        .tab-pane.fade {
+            opacity: 0;
+        }
+        .tab-pane.fade.show {
+            opacity: 1;
+        }
+        .tab-pane h5 {
+            color: #1e3a8a;
+            margin-bottom: 1rem;
         }
     </style>
 </head>
 <body>
-    <div layout:fragment="content" class="container py-5">
+    <div layout:fragment="content" class="custom-container py-5">
         <main>
+            <!-- Breadcrumb -->
+            <div id="e2ebf6">
+                <div class="breadcrumb-wrapper">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb" style="margin-bottom: 0;">
+                            <li class="breadcrumb-item">
+                                <a href="/home">Trang chủ</a>
+                            </li>
+                            <li class="breadcrumb-item" th:if="${product.idCategory != null and product.categoryName != null}">
+                                <a th:href="@{/categories/{id}(id=${product.idCategory})}" th:text="${product.categoryName}">Danh mục</a>
+                            </li>
+                            <li class="breadcrumb-item active" aria-current="page" th:text="${product.name != null ? product.name : 'Sản phẩm'}">Tên sản phẩm</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Modal Thông Báo Thành Công -->
+            <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="successModalLabel">Thêm vào giỏ hàng thành công</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p th:text="${message != null ? message : 'Sản phẩm đã được thêm vào giỏ hàng!'}"></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tiếp tục mua sắm</button>
+                            <a href="/cart" class="btn btn-primary">Xem giỏ hàng</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thông Báo Lỗi (nếu có) -->
+            <th:block th:if="${error}">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <span th:text="${error}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            </th:block>
+
             <div class="container py-5">
                 <div class="row">
                     <!-- Product Images -->
@@ -87,7 +380,7 @@
                         <!-- Configurations -->
                         <div th:if="${#lists.isEmpty(product.configurations)} == false">
                             <h5>Thông tin chi tiết</h5>
-                            <ul class="list-unstyled">
+                            <ul class="list-unstyled configurations-list">
                                 <li th:each="config : ${product.configurations}">
                                     <strong th:text="${config.configName} + ':'"></strong>
                                     <span th:text="${config.value}"></span>
@@ -99,8 +392,8 @@
                             <form th:action="@{/cart/add}" method="post" th:if="${product.quantity > 0}">
                                 <input type="hidden" name="productId" th:value="${product.id}">
                                 <input type="number" name="quantity" value="1" min="1" th:max="${product.quantity}"
-                                       class="form-control w-25 d-inline me-2">
-                                <button type="submit" class="btn btn-primary btn-lg">
+                                       class="form-control w-25 d-inline me-2 quantity-input">
+                                <button type="button" class="btn btn-primary btn-lg">
                                     <i class="bi bi-cart-plus"></i> Thêm vào giỏ hàng
                                 </button>
                             </form>
@@ -142,6 +435,17 @@
                     </div>
                 </div>
             </div>
+
+            <!-- JavaScript để kích hoạt modal khi có thông báo thành công -->
+            <script th:inline="javascript">
+                document.addEventListener('DOMContentLoaded', function () {
+                    const message = /*[[${message}]]*/ null;
+                    if (message) {
+                        const modal = new bootstrap.Modal(document.getElementById('successModal'));
+                        modal.show();
+                    }
+                });
+            </script>
         </main>
     </div>
 </body>

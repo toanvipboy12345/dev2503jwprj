@@ -40,6 +40,9 @@
                 <li>
                     <a class="nav-link px-3 py-1 text-white rounded-start d-flex align-items-center" href="/admin/products/add">Thêm sản phẩm</a>
                 </li>
+                <li>
+                    <a class="nav-link px-3 py-1 text-white rounded-start d-flex align-items-center" href="/admin/inventory/list">Quản lý kho hàng</a>
+                </li>
             </ul>
         </li>
         <li class="nav-item">
@@ -49,16 +52,40 @@
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link px-3 py-2 rounded-start d-flex align-items-center" href="/admin/inventory/list">
-                <i class="fa fa-fw fa-warehouse me-2"></i>
-                <span>Quản lý kho hàng</span>
-            </a>
-        </li>
-        <li class="nav-item">
             <a class="nav-link px-3 py-2 rounded-start d-flex align-items-center" href="/admin/promotions/list">
                 <i class="fa fa-fw fa-tags me-2"></i>
                 <span>Quản lý khuyến mãi</span>
             </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link px-3 py-2 rounded-start d-flex align-items-center" href="#collapseTransport" data-bs-toggle="collapse" aria-expanded="false" aria-controls="collapseTransport">
+                <i class="fa fa-fw fa-truck me-2"></i>
+                <span>Quản lý vận chuyển</span>
+                <i class="fa fa-fw fa-angle-down float-end mt-1 dropdown-icon"></i>
+            </a>
+            <ul class="collapse list-unstyled ps-4" id="collapseTransport">
+                <li>
+                    <a class="nav-link px-3 py-1 text-white rounded-start d-flex align-items-center" href="/admin/transport/list">Danh sách phương thức vận chuyển</a>
+                </li>
+                <li>
+                    <a class="nav-link px-3 py-1 text-white rounded-start d-flex align-items-center" href="/admin/transport/add">Thêm phương thức vận chuyển</a>
+                </li>
+            </ul>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link px-3 py-2 rounded-start d-flex align-items-center" href="#collapsePayment" data-bs-toggle="collapse" aria-expanded="false" aria-controls="collapsePayment">
+                <i class="fa fa-fw fa-credit-card me-2"></i>
+                <span>Quản lý phương thức thanh toán</span>
+                <i class="fa fa-fw fa-angle-down float-end mt-1 dropdown-icon"></i>
+            </a>
+            <ul class="collapse list-unstyled ps-4" id="collapsePayment">
+                <li>
+                    <a class="nav-link px-3 py-1 text-white rounded-start d-flex align-items-center" href="/admin/payment/list">Danh sách phương thức thanh toán</a>
+                </li>
+                <li>
+                    <a class="nav-link px-3 py-1 text-white rounded-start d-flex align-items-center" href="/admin/payment/add">Thêm phương thức thanh toán</a>
+                </li>
+            </ul>
         </li>
         <li class="nav-item">
             <a class="nav-link px-3 py-2 rounded-start d-flex align-items-center" href="#collapseBlog" data-bs-toggle="collapse" aria-expanded="false" aria-controls="collapseBlog">
